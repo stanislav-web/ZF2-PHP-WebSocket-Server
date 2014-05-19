@@ -1,5 +1,7 @@
 ZF2 PHP WebSocket Server v1.0
 --------------------------------------
+Require PHP 5.4+
+
 Running Server :
 
 1. That needs to be done is adding it to your application's list of active modules. Add module "WebSockets" in your application.config.php
