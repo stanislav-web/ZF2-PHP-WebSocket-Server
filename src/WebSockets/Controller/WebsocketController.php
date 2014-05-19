@@ -1,16 +1,16 @@
 <?php
-namespace WebSockets\Controller; // пространтво имен текущего контроллера
+namespace WebSockets\Controller; // Namespaces of current controller
 
 use Zend\Mvc\Controller\AbstractActionController;
 use WebSockets\Service\WebsocketServer as Server;
 use WebSockets\Exception;
 
 /**
- * Контроллер планировщика
+ * Controller to run through a browser
  * @package Zend Framework 2
  * @subpackage WebSockets
- * @since PHP >=5.3.xx
- * @version 2.15
+ * @since PHP >=5.4
+ * @version 1.0
  * @author Stanislav WEB | Lugansk <stanisov@gmail.com>
  * @copyright Stanilav WEB
  * @license Zend Framework GUI licene
@@ -20,33 +20,23 @@ class WebsocketController extends AbstractActionController
 {
 
     /**
-     * $_server Объект соединения с сервером
+     * $_server Object server connection
      * @access private
      * @var resource
      */    
     private $_server = null;    
     
     /**
-     * zfService() Менеджер зарегистрированных сервисов ZF2
-     * @access public
-     * @return ServiceManager
-     */
-    public function zfService()
-    {
-        return $this->getServiceLocator();
-    } 
-    
-    /**
-     * openAction() Запуск сокет - сервера
+     * openAction() Running socket - server
      * @access public
      * @return console
      */    
-    public function indexAction()
+    public function openAction()
     {   
-        // Подключаю настройки
-        $config = $this->zfService()->get('Config')['websockets']; 
+        // include config's
+        $config = $this->getServiceLocator()->get('Config')['websockets']; 
 
-        // Запускаю сервер
+        // Try to start server
         
         try {
             if($this->_server == null) $this->_server   = new Server($config['server']);
@@ -57,14 +47,4 @@ class WebsocketController extends AbstractActionController
             echo $e->getMessage();
         }
     } 
-    
-    /**
-     * closeAction() Остановка сокет - сервера
-     * @access public
-     * @return console
-     */    
-    public function closeAction()
-    {   
-
-    }    
 }

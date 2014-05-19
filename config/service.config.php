@@ -1,15 +1,11 @@
 <?php
 /**
- * Конфигуратор сервисов модуля, вызываемы с помощью ServiceManager
- * Helper
- * Model
- * Service
- * Validator
+ * Configurator services module callable using ServiceManager
  */
 
 return array(
 
     'invokables'    =>  array(
-        'websocket.Server'      => 'Websocket\Service\WebsocketServer',       // сервер для работы с постоянным соединением
+        'websocket.Server'      => 'Websocket\Service\WebsocketServer',       // Service for a permanent connection with
     ),
 );

@@ -1,45 +1,41 @@
 <?php
-/**
- * Конфигуратор маршрутизатора текущего модуля (Websocket)
- * Тут задаются настройки алиасов, а также шаблон обработки URL
- * Записываются все контроллеры в процессе создания приложения
- * Устанавливается путь к приложению по умолчанию
- */
+/** 
+  * Configurator router current module (Websocket) 
+  * Here are set settings aliases and URL template processing 
+  * Recorded all controllers in the process of creating an application 
+  * Set the path to the application by default 
+  */
 return array(
     
-    //Параметры постоянного соединения (WS)
+    // The parameters of the compound (WS)
     
     'websockets'    => array(
         'server'    => array( // коннект к серверу
             'host'          =>  '127.0.0.1',  
             'port'          =>  9000
         ),
-        'allowed_origins'   =>  array(   // допустимые хосты
-            'zf.local',
-            'www.zf.local'
-        ),
     ),
     
      /**
-      * Пространство имен для всех Cron консольных контроллеров
+      * Namespace for all controllers
       */
     'controllers' => array(
         'invokables' => array(
-            'websocket.Controller'      => 'WebSockets\Controller\WebsocketController',         // вызов контоллера управления соединением
-            'websocket.CLI'             => 'WebSockets\Controller\WebsocketCLIController',      // контроллер для запуска через CLI
+            'websocket.Controller'      => 'WebSockets\Controller\WebsocketController',         // call controller connection management
+            'websocket.CLI'             => 'WebSockets\Controller\WebsocketCLIController',      // controller to run through the CLI
         ),
     ),
 
     /**
-     * Настройка маршрутизатора модуля
+     * Configure the router module
      */
 
     'router' => array(
         'routes' => array(
 
-            // Роут сокет-сервера
+            // Rout for socket server
                 
-            'websocket' => array( // открытие соединения через браузер
+            'websocket' => array( // opening a connection through a browser (not recomended)
                 'type'          => 'Segment',
                 'options'       => array(
                     'route'         => '/websocket[/:action]',
@@ -58,7 +54,7 @@ return array(
     'console' => array(
         'router' => array(
             'routes' => array(
-                'websocket-console' => array( // открытие соединения через CLI
+                'websocket-console' => array( // opening a connection through a CLI
                     'options'   => array(
                         'route' => 'websocket open [--verbose|-v]',
                         'defaults' => array(

@@ -1,17 +1,17 @@
 <?php
-namespace WebSockets\Controller; // пространтво имен текущего контроллера
+namespace WebSockets\Controller; // Namespaces of current controller
 
 use Zend\Mvc\Controller\AbstractActionController;
-use Zend\Console\Request as ConsoleRequest; // ограничиваю консольным выводом
-use WebSockets\Service\WebsocketServer as Server;
+use Zend\Console\Request as ConsoleRequest; // limiting console output
+use WebSockets\Service\WebsocketServer as Server; // add php server
 use WebSockets\Exception;
 
 /**
- * Контроллер планировщика (Консольный вывод)
+ * Controller to run through a CLI
  * @package Zend Framework 2
  * @subpackage WebSockets
- * @since PHP >=5.3.xx
- * @version 2.15
+ * @since PHP >=5.4
+ * @version 1.0
  * @author Stanislav WEB | Lugansk <stanisov@gmail.com>
  * @copyright Stanilav WEB
  * @license Zend Framework GUI licene
@@ -20,24 +20,14 @@ use WebSockets\Exception;
 class WebsocketCLIController extends AbstractActionController
 {
     /**
-     * $_server Объект соединения с сервером
+     * $_server Object server connection
      * @access private
      * @var resource
      */    
     private $_server = null;    
-    
+
     /**
-     * zfService() Менеджер зарегистрированных сервисов ZF2
-     * @access public
-     * @return ServiceManager
-     */
-    public function zfService()
-    {
-        return $this->getServiceLocator();
-    } 
-    
-    /**
-     * openAction() Запуск сокет - сервера
+     * openAction() Running socket - server
      * @access public
      * @return console
      */    
@@ -48,9 +38,11 @@ class WebsocketCLIController extends AbstractActionController
         if(!$request instanceof ConsoleRequest) {
             throw new \RuntimeException('Use only for CLI!');
         }
-        $config = $this->zfService()->get('Config')['websockets']; // подключаю настройки
+        
+        // include config's
+        $config = $this->getServiceLocator()->get('Config')['websockets']; 
 
-        // Запускаю сервер
+        // Try to start server
         
         try {        
             if($this->_server == null) $this->_server   = new Server($config['server']);

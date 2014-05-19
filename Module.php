@@ -1,16 +1,16 @@
 <?php
-namespace WebSockets; // объявляю пространство имен для текущего модуля "WebSockets"
+namespace WebSockets; // declare namespace for the current module "WebSockets"
 
-use Zend\ModuleManager\Feature\ConfigProviderInterface;         // интерфейсы для конфигуратора
-use Zend\ModuleManager\Feature\ConsoleUsageProviderInterface;   // интерфейсы для консоли
-use Zend\Console\Adapter\AdapterInterface as Console;           // консоль
+use Zend\ModuleManager\Feature\ConfigProviderInterface;         // interfaces for configurator
+use Zend\ModuleManager\Feature\ConsoleUsageProviderInterface;   // interfaces for CLI
+use Zend\Console\Adapter\AdapterInterface as Console;           // add adapter for provider
 
 /**
- * Модуль для консольного запуска постоянного соединенияя WebSockets
+ * Module for the console launch permanent connection WebSockets
  * @package Zend Framework 2
- * @subpackage Cronjob
- * @since PHP >=5.3.xx
- * @version 2.15
+ * @subpackage WebSockets
+ * @since PHP >=5.4
+ * @version 1.0
  * @author Stanislav WEB | Lugansk <stanisov@gmail.com>
  * @copyright Stanilav WEB
  * @license Zend Framework GUI licene
@@ -19,7 +19,7 @@ use Zend\Console\Adapter\AdapterInterface as Console;           // консол�
 class Module {
        
     /**
-     * getConfig() метод загрузки конфигуратора приложения
+     * getConfig() configurator boot method for application
      * @access public
      * @return file
      */
@@ -29,16 +29,16 @@ class Module {
     }
     
     /**
-     * getAutoloaderConfig() метод установки автозагрузчиков
-     * В моем случае, я подключаю карту классов
-     * и устанавливаю пространство имен для MVC директории приложения
+     * getAutoloaderConfig() installation method autoloaders 
+     * In my case, I connect the class map 
+     * And set the namespace for the MVC application directory
      * @access public
      * @return array
      */
     public function getAutoloaderConfig()
     {
         return array(
-            // устанавливаю пространство имен для MVC директории с приложением
+            // install namespace for MVC application directory
             'Zend\Loader\StandardAutoloader'    =>  array(
                 'namespaces'    =>  array(
                     __NAMESPACE__   =>  __DIR__.'/src/'.__NAMESPACE__,
@@ -48,7 +48,7 @@ class Module {
     } 
     
     /**
-     * getServiceConfig() метод загрузки сервисов
+     * getServiceConfig() method of loading services
      * @access public
      * @return file
      */
@@ -58,7 +58,7 @@ class Module {
     }
     
     /**
-     * getConsoleUsage(Console $console) загружаю консольные скрипты, описания комманд
+     * getConsoleUsage(Console $console) cantilever load scripts, descriptions of commands
      * @access public
      * @return console
      */
@@ -66,7 +66,7 @@ class Module {
     {
         return array(
             
-            // Тут я описываю консольную комманду
+            // Here I describe the console Command
             
             'websocket open [--verbose|-v]' => 'Websocket server start',
             array('--verbose|-v'    =>  '(optional) turn on verbose mode'),
