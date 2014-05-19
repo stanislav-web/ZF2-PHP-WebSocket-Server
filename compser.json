@@ -1,0 +1,30 @@
+{
+    "name": "stanislav-web/ZF2-PHP-WebSocket-Server",
+    "description": "ZendFramework2 PHP WebSocket Server v1.0",
+    "type": "library",
+    "keywords": [
+        "zf2",
+        "websockets",
+        "websocket server"
+    ],
+    "homepage": "https://github.com/stanislav-web/ZF2-PHP-WebSocket-Server",
+    "authors": [
+        {
+            "name": "Stanislav WEB",
+            "email": "stanisov@gmail.com",
+            "homepage": "https://github.com/stanislav-web/"
+        }
+    ],
+    "require": {
+        "php": ">=5.4",
+        "zendframework/zendframework": ">=2.0.0"
+    },
+    "autoload": {
+        "psr-0": {
+            "WebSockets": "src/"
+        },
+        "classmap": [
+            "./"
+        ]
+    }
+}
