@@ -10,7 +10,7 @@ return array(
     // The parameters of the compound (WS)
     
     'websockets'    => array(
-        'server'    => array( // коннект к серверу
+        'server'    => array( // connect to the server
             'host'          =>  '127.0.0.1',  
             'port'          =>  9000
         ),
