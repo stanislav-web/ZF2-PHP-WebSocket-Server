@@ -1,4 +1,5 @@
 ZF2 PHP WebSocket Server v1.1
+![Alt text](https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcRpi209uZxeUrXP6cFLxuFbsTQkm9V0anTgp7Y-ltpEG6sw-txlvg "WebSockets")
 --------------------------------------
 
 #### Requirements
@@ -35,11 +36,13 @@ You're always can ask me for this module if you have write me [issue](https://gi
 
 --------------------------------------
 In order to start using the module clone the repo in your vendor directory or add it as a submodule if you're already using git for your project:
+
     `
     git clone https://github.com/stanislav-web/ZF2-PHP-WebSocket-Server.git vendor/WebSockets
     or
     git submodule add     git clone https://github.com/stanislav-web/ZF2-PHP-WebSocket-Server.git vendor/WebSockets
     `
+    
 The module will also be available as a Composer package soon.
 
 
