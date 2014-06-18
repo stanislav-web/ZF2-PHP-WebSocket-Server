@@ -48,9 +48,41 @@ class WebsocketCLIController extends AbstractActionController
             if($this->_server == null) $this->_server   = new Server($config['server']);
             $this->_server->start();
         }
-        catch (Exception\ExceptionStrategy $e) 
+        catch(Exception\ExceptionStrategy $e) 
         {
             echo $e->getMessage();
         }        
     } 
+    
+    /**
+     * systemAction() System command
+     * @access public
+     * @return console
+     */    
+    public function systemAction()
+    {   
+        $request    = $this->getRequest();
+
+        if(!$request instanceof ConsoleRequest) {
+            throw new \RuntimeException('Use only for CLI!');
+        }
+        
+        // Try to start actions
+        
+        try {        
+            // Get system service name  from console and check if the user used --verbose or -v flag
+            $option     = $request->getParam('option', false);
+            $verbose    = ($request->getParam('verbose')) ? $request->getParam('verbose') : $request->getParam('v');
+            
+            if($verbose) echo 'Command execute: '.$option.PHP_EOL;
+            $option = preg_replace('#"#', '', $option);
+            
+            system($option, $val);
+        }
+        catch(Exception\ExceptionStrategy $e) 
+        {
+            echo $e->getMessage();
+        }        
+    }     
+    
 }

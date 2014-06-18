@@ -1,9 +1,11 @@
 <?php
 namespace WebSockets; // declare namespace for the current module "WebSockets"
 
-use Zend\ModuleManager\Feature\ConfigProviderInterface;         // interfaces for configurator
-use Zend\ModuleManager\Feature\ConsoleUsageProviderInterface;   // interfaces for CLI
-use Zend\Console\Adapter\AdapterInterface as Console;           // add adapter for provider
+use Zend\ModuleManager\Feature\AutoloaderProviderInterface,     // provide autoloader configurations
+    Zend\ModuleManager\Feature\ConfigProviderInterface,         // interfaces for configurator
+    Zend\ModuleManager\Feature\ConsoleUsageProviderInterface,   // interfaces for CLI
+    Zend\ModuleManager\Feature\ConsoleBannerProviderInterface,  // provide console banner
+    Zend\Console\Adapter\AdapterInterface as Console;           // add adapter for provider
 
 /**
  * Module for the console launch permanent connection WebSockets
@@ -16,7 +18,11 @@ use Zend\Console\Adapter\AdapterInterface as Console;           // add adapter f
  * @license Zend Framework GUI licene
  * @filesource /module/WebSockets/Module.php
  */
-class Module {
+class Module implements 
+                        AutoloaderProviderInterface,
+                        ConfigProviderInterface,
+                        ConsoleUsageProviderInterface,
+                        ConsoleBannerProviderInterface {
        
     /**
      * getConfig() configurator boot method for application
@@ -58,7 +64,7 @@ class Module {
     }
     
     /**
-     * getConsoleUsage(Console $console) cantilever load scripts, descriptions of commands
+     * getConsoleUsage(Console $console) cantilever load scripts, descriptions of commands (For Console usage help)
      * @access public
      * @return console
      */
@@ -68,8 +74,17 @@ class Module {
             
             // Here I describe the console Command
             
-            'websocket open [--verbose|-v]' => 'Websocket server start',
+            'websocket open ' => 'Websocket server start',
+            'websocket system [--verbose|-v] <option>'   =>  'type the system command',
+            array('option'          =>  'system command for your CLI'),
             array('--verbose|-v'    =>  '(optional) turn on verbose mode'),
         );
     }
+    
+    public function getConsoleBanner(Console $console)
+    {
+        return '###################################'.PHP_EOL
+        .'### Running WebSocket Module... ###'.PHP_EOL
+        .'###################################';
+    }    
 }

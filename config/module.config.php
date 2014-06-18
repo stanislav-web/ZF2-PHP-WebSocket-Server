@@ -5,65 +5,76 @@
   * Recorded all controllers in the process of creating an application 
   * Set the path to the application by default 
   */
-return array(
+return [
     
     // The parameters of the compound (WS)
     
-    'websockets'    => array(
-        'server'    => array( // connect to the server
+    'websockets'    => [
+        'server'    => [ // setup WebSocket connection
             'host'          =>  '127.0.0.1',  
             'port'          =>  9000
-        ),
-    ),
+        ],
+    ],
     
      /**
       * Namespace for all controllers
       */
-    'controllers' => array(
-        'invokables' => array(
+    'controllers' => [
+        'invokables' => [
             'websocket.Controller'      => 'WebSockets\Controller\WebsocketController',         // call controller connection management
             'websocket.CLI'             => 'WebSockets\Controller\WebsocketCLIController',      // controller to run through the CLI
-        ),
-    ),
+        ],
+    ],
 
     /**
      * Configure the router module
      */
 
-    'router' => array(
-        'routes' => array(
+    'router' => [
+        'routes' => [
 
             // Rout for socket server
                 
-            'websocket' => array( // opening a connection through a browser (not recomended)
+            'websocket' => [ // opening a connection through a browser (not recomended)
                 'type'          => 'Segment',
-                'options'       => array(
+                'options'       => [
                     'route'         => '/websocket[/:action]',
-                    'constraints'   => array(
+                    'constraints'   => [
                         'action'        => 'open',
-                    ),
-                    'defaults' => array(
+                    ],
+                    'defaults' => [
                         'controller'    => 'websocket.Controller',
                         'action'        => 'open',
-                    ),
-                ),
-            ),
-        ),
-    ), 
+                    ],
+                ],
+            ],
+        ],
+    ], 
     
-    'console' => array(
-        'router' => array(
-            'routes' => array(
-                'websocket-console' => array( // opening a connection through a CLI
-                    'options'   => array(
-                        'route' => 'websocket open [--verbose|-v]',
-                        'defaults' => array(
+    'console' => [
+        'router' => [
+            'routes' => [
+                'websocket-console' => [ // opening a connection through a CLI
+                    'options'   => [
+                        'route' => 'websocket open',
+                        'defaults' => [
+                            '__NAMESPACE__' => 'WebSockets\Controller\WebsocketCLIController',
                             'controller'    => 'websocket.CLI',
                             'action'        => 'open',
-                        ),
-                    ),
-                ),            
-            ),
-        ),
-    ),
-);
+                        ],
+                    ],
+                ],  
+                'websocket-console-info' => [ // costom system command
+                    'options'   => [
+                        'route' => 'websocket system [--verbose|-v] <option>',
+                        'defaults' => [
+                            '__NAMESPACE__' => 'WebSockets\Controller\WebsocketCLIController',
+                            'controller'    => 'websocket.CLI',
+                            'action'        => 'system',
+                        ],
+                    ],
+                ],                
+            ],
+        ],
+    ],
+];
