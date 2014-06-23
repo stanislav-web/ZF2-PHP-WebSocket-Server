@@ -43,14 +43,17 @@ class Module implements
      */
     public function getAutoloaderConfig()
     {
-        return array(
+        return [
             // install namespace for MVC application directory
-            'Zend\Loader\StandardAutoloader'    =>  array(
-                'namespaces'    =>  array(
+            'Zend\Loader\ClassMapAutoloader'    =>  [
+                __DIR__.'/autoload_classmap.php',
+            ],            
+            /*'Zend\Loader\StandardAutoloader'    =>  [
+                'namespaces'    =>  [
                     __NAMESPACE__   =>  __DIR__.'/src/'.__NAMESPACE__,
-                ),
-            ),
-        );        
+                ],
+            ],*/
+        ];        
     } 
     
     /**
@@ -70,15 +73,15 @@ class Module implements
      */
     public function getConsoleUsage(Console $console)
     {
-        return array(
+        return [
             
             // Here I describe the console Command
             
             'websocket open ' => 'Websocket server start',
             'websocket system [--verbose|-v] <option>'   =>  'type the system command',
-            array('option'          =>  'system command for your CLI'),
-            array('--verbose|-v'    =>  '(optional) turn on verbose mode'),
-        );
+            ['option'          =>  'system command for your CLI'],
+            ['--verbose|-v'    =>  '(optional) turn on verbose mode'],
+        ];
     }
     
     public function getConsoleBanner(Console $console)
