@@ -1,4 +1,4 @@
-ZF2 PHP WebSocket Server v1.1
+ZF2 PHP WebSocket Server v1.1.2
 ![Alt text](https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcRpi209uZxeUrXP6cFLxuFbsTQkm9V0anTgp7Y-ltpEG6sw-txlvg "WebSockets")
 --------------------------------------
 
@@ -9,6 +9,9 @@ ZF2 PHP WebSocket Server v1.1
 
 #### Changes
 ------------
+v1.1.2
+- Console stdout>> while starting server
+
 v1.1
 - Fixes some problem with startup
 - Add console command interface for costom system commands (for example)

@@ -1,6 +1,6 @@
 {
     "name": "stanislav-web/ZF2-PHP-WebSocket-Server",
-    "description": "ZendFramework2 PHP WebSocket Server v1.1",
+    "description": "ZendFramework2 PHP WebSocket Server v1.1.2",
     "type": "library",
     "keywords": [
         "zf2",

@@ -32,12 +32,12 @@ class WebsocketServer {
     protected $_connection = null;
     
     /**
-     * $__clients ID compounds which uses stream
-     * @access private
+     * $_sockets Connections array
+     * @access protected
      * @var  array
      */
-    private $__clients = array();  
-    
+    protected $_sockets = null;    
+ 
     /**
      * __construct(array $config) Initializes the settings
      * @param array $config array with the connection config
@@ -56,33 +56,45 @@ class WebsocketServer {
      */
     public function start()
     {
-        $null = NULL;
-        
         // open TCP / IP stream and hang port specified in the config
         $this->_connection = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+        
+        // reuseable port
         socket_set_option($this->_connection, SOL_SOCKET, SO_REUSEADDR, 1);
+        
+        //bind socket to specified host
         socket_bind($this->_connection, 0, $this->_config['port']);
+        
+        // listen connection Resourse #id
         socket_listen($this->_connection);
-        $this->__clients = array($this->_connection);  
         
-        // run endless connection
+        // add Master connection ID
+        $this->_sockets[] = $this->_connection;  
         
-        while(true) 
+        $this->__sendConsoleMsg("Server started\nListening on: ".$this->_config['host'].':'.$this->_config['port']);
+        $this->__sendConsoleMsg("Primary socket: ".$this->_connection);
+        
+        sleep(3);
+
+        while(true) // run endless connection. Non Stop!!
         {
-            // Get socket connection ID
-            $changed = $this->__clients;
-            socket_select($changed, $null, $null, 0, 10);
-	
+            $read = $this->_sockets;
+            $write = $except = null;
+            
+            // returns the socket resources in $read socket's array
+            // $read array will be modified after
+            socket_select($read, $write, $except, 0, 10);
+
             // check list for new connection ID, and if it is what is already working with him
-            if(in_array($this->_connection, $changed)) 
+            if(in_array($this->_connection, $read)) 
             {
-		$socket_new = socket_accept($this->_connection); 
-		$this->__clients[] = $socket_new; 
-		
-		$header = socket_read($socket_new, 1024);
-		$this->__handShaking($header, $socket_new, $this->_config['host'],  $this->_config['port']); // perform websocket handshake
-		socket_getpeername($socket_new, $ip); // get IP socket connection
-                
+		$client = socket_accept($this->_connection); 
+		$this->_sockets[] = $client; 
+
+		$header = socket_read($client, 1024);
+		$this->__handShaking($header, $client, $this->_config['host'],  $this->_config['port']); // perform websocket handshake
+		socket_getpeername($client, $ip);  //get ip address of connected socket
+
                 // Create alert browser of the new connection
 		$response = $this->__mask(json_encode(
                         [
@@ -91,18 +103,18 @@ class WebsocketServer {
                         ]
                     )
                 ); 
-		$this->__sendMessage($response); 
-                
+		$this->__sendMessage($response);          
+
 		// kill Connect ID used before creating a new connection
-		$found_socket = array_search($this->_connection, $changed);
-		unset($changed[$found_socket]);
+		$found_socket = array_search($this->_connection, $read);
+		unset($read[$found_socket]);
             }
 	
             // I now use all the connections and get responses from pure
-            foreach($changed as $changed_socket) 
+            foreach($read as $sock) 
             {	
 		// check all incoming data
-		while(socket_recv($changed_socket, $buf, 1024, 0) >= 1)
+		while(socket_recv($sock, $buf, 1024, 0) >= 1)
 		{
                     $received               = $this->__unmask($buf); // decipher the data sent
                     $response_data    = (array)json_decode($received);
@@ -114,13 +126,13 @@ class WebsocketServer {
 		}
 		
                 // Read incoming data from stream
-		$buf = @socket_read($changed_socket, 1024, PHP_NORMAL_READ);
+		$buf = @socket_read($sock, 1024, PHP_NORMAL_READ);
 		if($buf === false) 
                 { 
                     // if they not exist, kill the current connection
-                    $found_socket = array_search($changed_socket, $clients);
-                    socket_getpeername($changed_socket, $ip);
-                    unset($clients[$found_socket]);
+                    $found_socket = array_search($sock, $this->_sockets);
+                    socket_getpeername($sock, $ip);
+                    unset($this->_sockets[$found_socket]);
 			
                     // Create alert for the clien about disconnection
                     $response = $this->__mask(json_encode(
@@ -130,11 +142,9 @@ class WebsocketServer {
                             ]
                         )
                     );
-                    $this->__sendMessage($response);
 		}
             }
         }
-
         // connection destroy
         socket_close($this->_connection);        
     }
@@ -230,11 +240,33 @@ class WebsocketServer {
      */
     private function __sendMessage($msg)
     {
-	foreach($this->__clients as $changed_socket)
+	foreach($this->sockets as $sock)
 	{
-            @socket_write($changed_socket, $msg, strlen($msg));
+            @socket_write($sock, $msg, strlen($msg));
 	}
 	return true;
+    }
+    
+    /**
+     * sendConsoleMsg($data, $label = false) Output console message
+     * @param mixed $data stdout data
+     * @param string $label title
+     * @acceess private
+     */
+    private function __sendConsoleMsg($data, $label = false)
+    {
+        if(is_array($data)) \Zend\Debug\Debug::dump($data, $label);
+        else 
+        {
+            if($label) 
+            {
+                echo <<<EOS
+                ==== $label ====\n
+                $data\n
+EOS;
+            }
+            else echo $data."\n";
+        }
     }
 }
 ?>
