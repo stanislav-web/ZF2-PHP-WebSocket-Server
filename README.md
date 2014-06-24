@@ -37,6 +37,8 @@ You're always can ask me for this module if you have write me [issue](https://gi
 
 3. Go to your shell command-line interface and type: `php -q index.php websocket open`
 
+4. Setup your Client-side script's to communicating with the server .. ws://host:port/websockets/open communicating as similarity
+
 --------------------------------------
 In order to start using the module clone the repo in your vendor directory or add it as a submodule if you're already using git for your project:
 

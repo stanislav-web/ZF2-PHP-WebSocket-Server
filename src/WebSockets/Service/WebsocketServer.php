@@ -58,15 +58,15 @@ class WebsocketServer {
     {
         // open TCP / IP stream and hang port specified in the config
         $this->_connection = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-        
+	
+        //bind socket to specified host
+        socket_bind($this->_connection, $this->_config['host'], $this->_config['port']);        
         // reuseable port
+	
         socket_set_option($this->_connection, SOL_SOCKET, SO_REUSEADDR, 1);
         
-        //bind socket to specified host
-        socket_bind($this->_connection, 0, $this->_config['port']);
-        
-        // listen connection Resourse #id
-        socket_listen($this->_connection);
+        // listen socket Resourse #id
+        socket_listen($this->_connection, $this->_config['connections_limit']);
         
         // add Master connection ID
         $this->_sockets[] = $this->_connection;  
@@ -80,7 +80,7 @@ class WebsocketServer {
         {
             $read = $this->_sockets;
             $write = $except = null;
-            
+	    
             // returns the socket resources in $read socket's array
             // $read array will be modified after
             socket_select($read, $write, $except, 0, 10);
@@ -96,13 +96,12 @@ class WebsocketServer {
 		socket_getpeername($client, $ip);  //get ip address of connected socket
 
                 // Create alert browser of the new connection
-		$response = $this->__mask(json_encode(
-                        [
+		$response = $this->__mask(json_encode([
                             'type'      =>  'system', 
                             'message'   =>  $ip.' connected'
-                        ]
-                    )
+                    ])
                 ); 
+		
 		$this->__sendMessage($response);          
 
 		// kill Connect ID used before creating a new connection
@@ -116,7 +115,7 @@ class WebsocketServer {
 		// check all incoming data
 		while(socket_recv($sock, $buf, 1024, 0) >= 1)
 		{
-                    $received               = $this->__unmask($buf); // decipher the data sent
+                    $received         = $this->__unmask($buf); // decipher the data sent
                     $response_data    = (array)json_decode($received);
                         
                     // data that went into the client
@@ -135,12 +134,10 @@ class WebsocketServer {
                     unset($this->_sockets[$found_socket]);
 			
                     // Create alert for the clien about disconnection
-                    $response = $this->__mask(json_encode(
-                            [
+                    $response = $this->__mask(json_encode([
                                 'type'      =>  'system', 
                                 'message'   =>  $ip.' disconnected'
-                            ]
-                        )
+                        ])
                     );
 		}
             }
