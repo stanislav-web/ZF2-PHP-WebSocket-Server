@@ -1,9 +1,8 @@
 <?php
-
 namespace WebSockets\Exception;
 
 /**
- * Exception used when a file read or write fails
+ * ExceptionStrategy for WebSocket module
  * @package Zend Framework 2
  * @subpackage WebSockets
  * @since PHP >=5.4
@@ -13,10 +12,27 @@ namespace WebSockets\Exception;
  * @license Zend Framework GUI licene
  * @filesource /module/Websocket/src/Websocket/Exception/ExceptionStrategy.php
  */
-class ExceptionStrategy extends \RuntimeException {
+class ExceptionStrategy extends \UnexpectedValueException{
     
-    public function getMessage()
+    /**
+     * $_message only message in console
+     * @var type string
+     * @access protected
+     */
+    protected $_message = null;
+    
+    
+    /**
+     * $_line only message in console
+     * @var type string
+     * @access protected
+     */
+    protected $_line = null;
+    
+
+    
+    public function throwMessage()
     {
-       return parent::getMessage("#".$this->getCode()."\r\n ".$this->getFile()." ".$this->getLine()."\r\n".$this->getMessage());
+	return $this->getMessage().' [line: '.$this->getLine().']';
     }
 }

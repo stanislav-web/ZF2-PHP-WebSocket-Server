@@ -1,11 +1,13 @@
 <?php
-
 namespace WebSockets\Service; // Namespaces of current service
 
-use WebSockets\Exception; // add an exception class
+use WebSockets\Exception,
+    Zend\Json\Json,
+    Zend\Debug\Debug,
+    Zend\Log\Logger; 
 
 /**
- * Server for WebSocket protocol connection
+ * Server for WebSocket's protocol connection
  * @package Zend Framework 2
  * @subpackage WebSockets
  * @since PHP >=5.4
@@ -16,7 +18,7 @@ use WebSockets\Exception; // add an exception class
  * @filesource /module/Websocket/src/Websocket/Service/WebsocketServer.php
  */
 class WebsocketServer {
-    
+
     /**
      * $_config Server configuration
      * @access protected
@@ -25,19 +27,40 @@ class WebsocketServer {
     protected $_config = null;
     
     /**
-     * $_connection Resource ID
+     * $_logger Log object
      * @access protected
-     * @var  resourse
+     * @var  Zend\Log\Logger $_logger
      */
-    protected $_connection = null;
+    protected $_logger = null;
     
     /**
-     * $_sockets Connections array
+     * $log Log state
+     * @access private
+     * @var  boolean $log
+     */
+    private $__log = false;
+    
+    /**
+     * $_current Current connection
+     * @access protected
+     * @var  resourse #id
+     */
+    protected $_current = null;
+    
+    /**
+     * $_connections Connections array
      * @access protected
      * @var  array
      */
-    protected $_sockets = null;    
- 
+    protected $_connections = array();   
+    
+    /**
+     * $_clients active clients
+     * @access protected
+     * @var  int
+     */
+    protected $_clients = 0;  
+
     /**
      * __construct(array $config) Initializes the settings
      * @param array $config array with the connection config
@@ -45,150 +68,206 @@ class WebsocketServer {
      */
     public function __construct(array $config) 
     {
+	
         if(empty($config)) throw new Exception\ExceptionStrategy('Required parameters are incorrupted!');
         $this->_config    =   $config;
+
+	
+	// check if loging service is usable
+	if(true === $this->_config['log'])
+	{
+	    // add log writer
+	    if(null === $this->_logger)
+	    {
+		if(!file_exists($this->_config['logfile'])) 
+		    throw new Exception\ExceptionStrategy("Error! File {$this->_config['logfile']} does not exist"); 
+		$this->__log = true;
+		$this->_logger  =	new Logger();
+		$this->_logger->addWriter(new \Zend\Log\Writer\Stream($this->_config['logfile']));
+	    }
+	}	
+	
+	
+	$this->console("Running server...");
+	
+        // open TCP / IP stream and hang port specified in the config
+	$this->_current = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+		
+	if(!is_resource($this->_current)) 
+	    $this->console("(socket_create) Error [".socket_last_error()."]: ".socket_strerror(socket_last_error($this->_current)), true);
+
+        //bind socket to specified host
+	if(false == (socket_bind($this->_current, $this->_config['host'], $this->_config['port']))) 
+	    $this->console("(socket_bind) Error [".socket_last_error()."]: ".socket_strerror(socket_last_error($this->_current)), true);
+
+        socket_set_option($this->_current, SOL_SOCKET, SO_REUSEADDR, 1);
+        
+        // listen socket Resourse #id
+	if(false == (socket_listen($this->_current, $this->_config['clients_limit']))) 
+	    $this->console("(socket_listen) Error [".socket_last_error()."]: ".socket_strerror(socket_last_error($this->_current)), true);
+        
+        // add primary connection ID
+        //$this->_sockets[] = $this->_current;  
+
+        $this->console(sprintf("Listening on: %s:%d", $this->_config['host'], $this->_config['port']));
+        $this->console(sprintf("Clients: %d / %d", $this->_clients, $this->_config['clients_limit']));
     }
     
     /**
-     * start() Running stream method
+     * run() Run connection
      * @access public
      * @return null
      */
-    public function start()
+    public function run()
     {
-        // open TCP / IP stream and hang port specified in the config
-        $this->_connection = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-	
-        //bind socket to specified host
-        socket_bind($this->_connection, $this->_config['host'], $this->_config['port']);        
-        // reuseable port
-	
-        socket_set_option($this->_connection, SOL_SOCKET, SO_REUSEADDR, 1);
-        
-        // listen socket Resourse #id
-        socket_listen($this->_connection, $this->_config['connections_limit']);
-        
-        // add Master connection ID
-        $this->_sockets[] = $this->_connection;  
-        
-        $this->__sendConsoleMsg("Server started\nListening on: ".$this->_config['host'].':'.$this->_config['port']);
-        $this->__sendConsoleMsg("Primary socket: ".$this->_connection);
-        
-        sleep(3);
-
-        while(true) // run endless connection. Non Stop!!
-        {
-            $read = $this->_sockets;
-            $write = $except = null;
-	    
-            // returns the socket resources in $read socket's array
-            // $read array will be modified after
-            socket_select($read, $write, $except, 0, 10);
-
-            // check list for new connection ID, and if it is what is already working with him
-            if(in_array($this->_connection, $read)) 
-            {
-		$client = socket_accept($this->_connection); 
-		$this->_sockets[] = $client; 
-
-		$header = socket_read($client, 1024);
-		$this->__handShaking($header, $client, $this->_config['host'],  $this->_config['port']); // perform websocket handshake
-		socket_getpeername($client, $ip);  //get ip address of connected socket
-
-                // Create alert browser of the new connection
-		$response = $this->__mask(json_encode([
-                            'type'      =>  'system', 
-                            'message'   =>  $ip.' connected'
-                    ])
-                ); 
-		
-		$this->__sendMessage($response);          
-
-		// kill Connect ID used before creating a new connection
-		$found_socket = array_search($this->_connection, $read);
-		unset($read[$found_socket]);
-            }
-	
-            // I now use all the connections and get responses from pure
-            foreach($read as $sock) 
-            {	
-		// check all incoming data
-		while(socket_recv($sock, $buf, 1024, 0) >= 1)
+	do {
+	    if(!!$connection = socket_accept($this->_current))
+	    {
+		if(!in_array($connection, $this->_connections))
 		{
-                    $received         = $this->__unmask($buf); // decipher the data sent
-                    $response_data    = (array)json_decode($received);
-                        
-                    // data that went into the client
-                    $response_text = $this->__mask(json_encode($response_data));
-                    $this->__sendMessage($response_text);
-                    break 2; // close the connection after sending data
-		}
-		
-                // Read incoming data from stream
-		$buf = @socket_read($sock, 1024, PHP_NORMAL_READ);
-		if($buf === false) 
-                { 
-                    // if they not exist, kill the current connection
-                    $found_socket = array_search($sock, $this->_sockets);
-                    socket_getpeername($sock, $ip);
-                    unset($this->_sockets[$found_socket]);
+		    $current = $this->_clients;
+		    $max = $this->_config['clients_limit'];
+		    if($max > $current)
+		    {
+			socket_getpeername($connection, $ip);
 			
-                    // Create alert for the clien about disconnection
-                    $response = $this->__mask(json_encode([
-                                'type'      =>  'system', 
-                                'message'   =>  $ip.' disconnected'
-                        ])
-                    );
+			// perform websocket handshake
+			$header = socket_read($connection, 1024);
+			$this->_sendHandshake($connection, $header);
+			
+			// add used connected
+			array_push($this->_connections, $connection);
+			
+			// add new connected ip (client)
+			$this->_clients = $this->_clients+1;
+			$this->console("{$ip} connected");
+			
+			// close connection
+			$this->disconnect($connection);			
+		    }
+		    else $this->console("Max number of clients connected.");
 		}
-            }
-        }
-        // connection destroy
-        socket_close($this->_connection);        
+	    }
+	    $i = 0; // prepare counter for the clients
+	    foreach($this->_connections as $socket)
+	    {
+		// read response data
+		$header = socket_read($socket, 1024);
+		
+		if(!$header)
+		{
+		    socket_getpeername($socket, $ip);
+		    
+		    $this->console("{$ip} disconnected");
+		    $this->_clients = $this->_clients-1;
+		    $this->disconnect($this->_connections[$i]);			
+		}
+		else
+		{	
+		    // decipher the data sent to this server
+		    $msg	= $this->_unmask($header); 
+		    
+		    // So! here are date from client decoded as array
+		    // It should made by costom client script and send via ws:// protocol
+		    
+		    $this->console($msg);
+		    $this->onMessage(Json::encode($msg), $this->_connections[$i]);	
+
+		    // disconnected after typing
+		    $this->disconnect($this->_connections[$i]);			
+		}
+		$i = $i+1;
+	    }
+	    $i = 0;
+	}
+	while(true);
+	
+        // close primary listening socket
+        $this->disconnect($this->_current);        
     }
     
     /**
-     * __handShaking($receved_header,$client_conn, $host, $port) Creating a connection header to the client
-     * @param text $receved_header received header of connection
-     * @param resourse $client_conn connection ID
-     * @param string $host host
-     * @param int $port port
-     * @access private
+     * disconnect($connection)
+     * @param resource #id $connection current client
+     * @access public
      * @return null
      */
-    private function __handShaking($receved_header, $client_conn, $host, $port)
+    public function disconnect($connection)
     {
-	$headers = array();
-	$lines = preg_split("/\r\n/", $receved_header);
-	foreach($lines as $line)
+	unset($connection);
+    }
+    
+    /**
+     * _sendHandshake($connectionId, $headers) Do the handshaking between client and server
+     * @param Resource #id $connectionId
+     * @param string $headers response connection headers
+     * @access protected
+     * @return boolean
+     */
+    protected function _sendHandshake($connectionId, $headers) 
+    {
+	$this->console("Getting client WebSocket version...");
+	if(preg_match("/Sec-WebSocket-Version: (.*)\r\n/", $headers, $match)) $version = $match[1];
+	else 
 	{
-            $line = chop($line);
-            if(preg_match('/\A(\S+): (.*)\z/', $line, $matches))
-            {
-		$headers[$matches[1]] = $matches[2];
-            }
+	    $this->console("The client doesn't support WebSocket");
+	    return false;
 	}
-        
-        // Encrypts the key and update the Response header
-	$secKey = $headers['Sec-WebSocket-Key'];
-	$secAccept = base64_encode(pack('H*', sha1($secKey . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11')));
-        $upgrade =  \Zend\Http\Request::fromString("<<<EOS 
-                HTTP/1.1 101 Web Socket Protocol Handshake\r\n
-                Upgrade: websocket\r\n
-                Connection: Upgrade\r\n
-                WebSocket-Origin: $host\r\n
-                WebSocket-Location: ws://$host:$port/websocket\r\n
-                Sec-WebSocket-Accept: $secAccept\r\n\r\n
-                EOS");
-	socket_write($client_conn,$upgrade,strlen($upgrade));
+		
+	$this->console("Client WebSocket version is {$version}, (required: 13)");
+	if($version == 13) 
+	{
+	    // Extract header variables
+	    if(preg_match("/GET (.*) HTTP/", $headers, $match))	    $root = $match[1];
+	    if(preg_match("/Host: (.*)\r\n/", $headers, $match))    $host = $match[1];
+	    if(preg_match("/Origin: (.*)\r\n/", $headers, $match))  $origin = $match[1];
+	    
+	    if(preg_match("/Sec-WebSocket-Key: (.*)\r\n/", $headers, $match)) $key = $match[1];
+			
+	    $this->console("Client headers are:");
+	    $this->console("\t- Root: ".$root);
+	    $this->console("\t- Host: ".$host);
+	    $this->console("\t- Origin: ".$origin);
+	    $this->console("\t- Sec-WebSocket-Key: ".$key);
+			
+	    //$this->console("Generating Sec-WebSocket-Accept key...");
+	    $acceptKey = base64_encode(pack('H*', sha1($key. '258EAFA5-E914-47DA-95CA-C5AB0DC85B11')));
+	    
+	    // setting up new response headers
+	    
+	    $upgrade =  array(
+		'HTTP/1.1 101 WebSocket Protocol Handshake',
+		'Upgrade: websocket',
+		'Connection: Upgrade',
+		'WebSocket-Origin: '.$origin,
+		'WebSocket-Location: ws://'.$host.$root,
+		'Sec-WebSocket-Accept: '.$acceptKey
+	    );
+	    $upgrade = implode("\r\n", $upgrade)."\r\n\r\n";
+
+	    //$this->console("Sending this response to the client {$connectionId}:\r\n".$upgrade);
+	    if(false === socket_write($connectionId, $upgrade, strlen($upgrade))) // use ====, because might be 0 bytes returned
+	    {
+		$this->console("Error [".socket_last_error()."]: ".socket_strerror(socket_last_error()));
+		// die() or callback from console
+	    }
+	    else $this->console("Handshake is successfully done!");
+	    return true;
+	}
+	else 
+	{
+	    $this->console("WebSocket version 13 required (the client supports version {$version})");
+	    return false;
+	}
     }    
 
     /**
-     * __mask($text)Encrypting incoming messages from client
+     * _mask($text) Encrypting incoming messages from client
      * @param string $text message
-     * @access private
+     * @access protected
      * @return string
      */
-    private function __mask($text)
+    protected function _mask($text)
     {
 	$b1 = 0x80 | (0x1 & 0x0f);
 	$length = strlen($text);
@@ -199,12 +278,12 @@ class WebsocketServer {
     }
   
     /**
-     * __unmask($text) Explanation for issuing messages to the client
+     * _unmask($text) Explanation for issuing messages to the client
      * @param string $text message
      * @access private
      * @return string
      */
-    private function __unmask($text) 
+    protected function _unmask($text) 
     {
 	$length = ord($text[1]) & 127;
 	if($length == 126) 
@@ -231,39 +310,57 @@ class WebsocketServer {
     }
     
     /**
-     * __sendMessage($msg) A message telling client
-     * @param string $msg Message unencrypted
+     * onMessage($msg) message telling client
+     * @param string $msg message unencrypted
+     * @access public
      * @return boolean
      */
-    private function __sendMessage($msg)
+    public function onMessage($msg, $socket)
     {
-	foreach($this->sockets as $sock)
-	{
-            @socket_write($sock, $msg, strlen($msg));
-	}
+	// encrypting received data
+	$msg = $this->_mask($msg);
+
+	//foreach($this->_sockets as $sock)
+	//{
+            @socket_write($socket, $msg, strlen($msg));
+	//}
 	return true;
     }
     
     /**
-     * sendConsoleMsg($data, $label = false) Output console message
-     * @param mixed $data stdout data
-     * @param string $label title
-     * @acceess private
+     * console($text, $exception = false, $exit = false) Output console message
+     * @param string $data stdout data
+     * @param boolean $exception throwed Eception
+     * @param boolean $exit die console out
+     * @acceess public
      */
-    private function __sendConsoleMsg($data, $label = false)
+    public function console($data, $exception = false, $exit = false)
     {
-        if(is_array($data)) \Zend\Debug\Debug::dump($data, $label);
-        else 
-        {
-            if($label) 
-            {
-                echo <<<EOS
-                ==== $label ====\n
-                $data\n
-EOS;
-            }
-            else echo $data."\n";
-        }
+	// check if console is usable
+	if(true === $this->_config['verbose'])
+	{
+	    if(is_array($data))
+	    {
+		Debug::dump($data, date('[Y-m-d H:i:s] '));
+		if(isset($this->__log)) $this->_logger->info($data);
+	    }
+	    else
+	    {
+		if(!is_resource($data)) $data = mb_convert_encoding($data, $this->_config['encoding']);
+		$text = date('[Y-m-d H:i:s] ').$data."\r\n";
+		if($exception) 
+		{
+		    if($this->__log) $this->_logger->crit($text);
+		    throw new Exception\ExceptionStrategy($text);
+		}
+		else 
+		{
+		    if($this->__log) $this->_logger->info($text);
+		    echo $text;	
+		}
+	    }
+	    if($exit) die();
+	}
     }
 }
 ?>

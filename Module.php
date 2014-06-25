@@ -2,6 +2,7 @@
 namespace WebSockets; // declare namespace for the current module "WebSockets"
 
 use Zend\ModuleManager\Feature\AutoloaderProviderInterface,     // provide autoloader configurations
+    Zend\ModuleManager\Feature\ViewHelperProviderInterface,	// provide view helpers
     Zend\ModuleManager\Feature\ConfigProviderInterface,         // interfaces for configurator
     Zend\ModuleManager\Feature\ConsoleUsageProviderInterface,   // interfaces for CLI
     Zend\ModuleManager\Feature\ConsoleBannerProviderInterface,  // provide console banner
@@ -20,6 +21,7 @@ use Zend\ModuleManager\Feature\AutoloaderProviderInterface,     // provide autol
  */
 class Module implements 
                         AutoloaderProviderInterface,
+			ViewHelperProviderInterface,
                         ConfigProviderInterface,
                         ConsoleUsageProviderInterface,
                         ConsoleBannerProviderInterface {
@@ -55,6 +57,20 @@ class Module implements
             ],*/
         ];        
     } 
+    
+    /**
+     * getViewHelperConfig() Setup your view helpers
+     * @access public
+     * @return array
+     */
+    public function getViewHelperConfig()
+    {
+        return [
+            'invokables' => [
+                'socket' =>  '\WebSockets\View\Helper\Socket',
+            ],
+        ];
+    }   
     
     /**
      * getServiceConfig() method of loading services

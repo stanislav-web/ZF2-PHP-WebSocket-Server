@@ -11,8 +11,15 @@ return [
     
     'websockets'    => [
         'server'    => [ // setup WebSocket connection
-            'host'          =>  '127.0.0.1',  
-            'port'          =>  9000
+            'host'			=>  '127.0.0.1',  
+            'port'			=>  9000,
+	    'clients_limit'		=>  10,		// limit active connections per socket loop
+	    'max_disconnections_time'	=>  30,		// limit active connections per socket loop
+	    'verbose'			=>  true,		// console stdout>>
+	    'encoding'			=>  'UTF-8',		// console encoding
+	    'log'			=>  true,
+	    'logfile'			=>  'logs/socket/actions.log',
+	    'action'		=>  '/websocket/open' // open controller/action from websocket.Controller
         ],
     ],
     

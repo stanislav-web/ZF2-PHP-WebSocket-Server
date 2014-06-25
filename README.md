@@ -1,4 +1,4 @@
-ZF2 PHP WebSocket Server v1.1.2
+ZF2 PHP WebSocket Server v1.3
 ![Alt text](https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcRpi209uZxeUrXP6cFLxuFbsTQkm9V0anTgp7Y-ltpEG6sw-txlvg "WebSockets")
 --------------------------------------
 
@@ -9,6 +9,20 @@ ZF2 PHP WebSocket Server v1.1.2
 
 #### Changes
 ------------
+v1.3
+- Add logger
+
+v1.2
+- Add verbose turner (console show\hide) (@see module.config.php)
+- Add socket function's exception handler
+- Fixed CLI stdout>> encoding
+- Add ViewHelper for a simple get server config params into view
+```
+<?php
+// for example
+echo $this->socket()->config('host'); // print 127.0.0.1 ?>
+?>
+
 v1.1.2
 - Console stdout>> while starting server
 
@@ -35,9 +49,9 @@ You're always can ask me for this module if you have write me [issue](https://gi
 
 2. Change host address in module.config.php
 
-3. Go to your shell command-line interface and type: `php -q index.php websocket open`
+3. Go to your shell command-line interface and type (running server as background): `php -q index.php websocket open`
 
-4. Setup your Client-side script's to communicating with the server .. ws://host:port/websockets/open communicating as similarity
+4. Setup your Client-side script's to communicating with the server .. ws://host:port/websocket/open communicating as similarity
 
 --------------------------------------
 In order to start using the module clone the repo in your vendor directory or add it as a submodule if you're already using git for your project:
@@ -49,5 +63,11 @@ In order to start using the module clone the repo in your vendor directory or ad
     `
     
 The module will also be available as a Composer package soon.
+
+#### Libraries used
+------------
+- [Zend Framework 2.3](https://github.com/zendframework/zf2)
+
+![Alt text](http://cs620519.vk.me/v620519508/a755/4lwSwtVe59g.jpg "WebSockets")
 
 

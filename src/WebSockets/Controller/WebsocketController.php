@@ -38,13 +38,14 @@ class WebsocketController extends AbstractActionController
 
         // Try to start server
         
-        try {
+        try {        
             if($this->_server == null) $this->_server   = new Server($config['server']);
-            $this->_server->start();
-        } 
-        catch (Exception\ExceptionStrategy $e) 
+	    // running server 
+            $this->_server->run();
+        }
+        catch(Exception\ExceptionStrategy $e) 
         {
             echo $e->getMessage();
-        }
+        } 
     } 
 }

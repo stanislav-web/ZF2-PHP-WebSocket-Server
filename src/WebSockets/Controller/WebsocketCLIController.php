@@ -46,7 +46,8 @@ class WebsocketCLIController extends AbstractActionController
         
         try {        
             if($this->_server == null) $this->_server   = new Server($config['server']);
-            $this->_server->start();
+	    // running server 
+            $this->_server->run();
         }
         catch(Exception\ExceptionStrategy $e) 
         {
@@ -81,7 +82,7 @@ class WebsocketCLIController extends AbstractActionController
         }
         catch(Exception\ExceptionStrategy $e) 
         {
-            echo $e->getMessage();
+            echo $e->throwMessage();
         }        
     }     
     
