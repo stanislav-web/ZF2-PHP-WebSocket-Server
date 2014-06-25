@@ -22,7 +22,7 @@ v1.2
 // for example
 echo $this->socket()->config('host'); // print 127.0.0.1 ?>
 ?>
-
+```
 v1.1.2
 - Console stdout>> while starting server
 
