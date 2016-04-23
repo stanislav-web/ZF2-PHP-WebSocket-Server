@@ -27,9 +27,9 @@ return [
       * Namespace for all controllers
       */
     'controllers' => [
-        'invokables' => [
-            'websocket.Controller'      => 'WebSockets\Controller\WebsocketController',         // call controller connection management
-            'websocket.CLI'             => 'WebSockets\Controller\WebsocketCLIController',      // controller to run through the CLI
+        'factories' => [
+            'websocket.Controller'      => 'WebSockets\Factory\WebsocketControllerFactory',         // call controller connection management
+            'websocket.CLI'             => 'WebSockets\Factory\WebsocketCLIControllerFactory',      // controller to run through the CLI
         ],
     ],
 
