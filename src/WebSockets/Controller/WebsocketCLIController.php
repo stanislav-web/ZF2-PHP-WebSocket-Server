@@ -26,11 +26,18 @@ class WebsocketCLIController extends AbstractActionController
      */    
     private $_server = null;    
 
+    protected $serviceLocator;
     /**
      * openAction() Running socket - server
      * @access public
      * @return console
-     */    
+     */
+
+    public function __construct($serviceLocator)
+    {
+        $this->serviceLocator = $serviceLocator;
+    }
+
     public function openAction()
     {   
         $request    = $this->getRequest();
@@ -40,7 +47,7 @@ class WebsocketCLIController extends AbstractActionController
         }
         
         // include config's
-        $config = $this->getServiceLocator()->get('Config')['websockets']; 
+        $config = $this->serviceLocator->get('Config')['websockets'];
 
         // Try to start server
         
